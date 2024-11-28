@@ -2,13 +2,22 @@ PORTB = $6000
 PORTA = $6001
 DDRB = $6002
 DDRA = $6003
+T1CL = $0004
+T1CH = $6005
+ACR = $600B
+IER = $600E
 
 E  = %10000000
 RW = %01000000
 RS = %00100000
 
+ACIA_DATA = $5000
+ACIA_STATUS = $5001
+ACIA_CMD = $5002
+ACIA_CTRL = $5003
+
   .org $8000
-; not sure what's above here
+
 reset:
   ldx #$ff
   txs
