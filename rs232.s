@@ -135,3 +135,6 @@ print_char:
   sta PORTB
   rts
 
+  .org $fffc
+  .word reset
+  .word $0000
