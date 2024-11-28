@@ -24,7 +24,7 @@ reset:
 
   lda #%11111111 ; Set all pins on port B to output
   sta DDRB
-  lda #%00000000 ; Set all pins on port A to input (this is 10111111 in video)
+  lda #%10111111 ; Set all pins on port A to input (this is 10111111 in video)
   sta DDRA
 
   jsr lcd_init
@@ -37,75 +37,23 @@ reset:
   lda #%00000001 ; Clear display
   jsr lcd_instruction
 
-  lda #1
-  sta PORTA
+  lda #$00
+  sta ACIA_STATUS ; soft reset (value does not matter)
 
-  lda #"*"
-  sta $0200
+  lda #$1f ; N-8-1, 19200 baud
+  sta ACIA_CTRL
 
-  lda #$01
-  trb PORTA ; Send start bit
-
-  ldx #8 ; Send 8 bits
-write_bit:
-  jsr bit_delay
-  ror $0200 ; Rotate the next bit right into C flag
-  bsc send_1
-  trb PORTA ; Send a 0
-  jmp tx_done
-send_1:
-  tsb PORTA ; Send a 1
-tx_done:
-  dex
-  bne write_bit
-
-  jsr bit_delay
-  tsb PORTA ; Send stop bit
-  jsr bit_delay
+  lda #$0b ; no parity, no echo, no interrupts
+  sta ACIA_CMD
 
 rx_wait:
-  bit PORTA ; Put PortA.6 into V flag
-  bvs rx_wait ; loop if no start bit
-  jsr half_bit_delay
+  lda ACIA_STATUS
+  and #$08 ; check rx buffer status flag
+  beq rx_wait ; loop if rx buffer empty
 
-  ldx #8
-read_bit:
-  bit PORTA ; Put PortA.6 into V flag
-  bvs recv_1
-  clc  ; we read a 0, put a 0 into the C flag
-  jmp rx_done
-recv_1:
-  sec  ; We read a 1, put a 1 into the C flag
-rx_done:
-  ror ; Rotate a registaer right, putting C flag as new MSB
-  dex
-  bne read_bit
-
-  ; All 8 bits are now in A
+  lda ACIA_DATA
   jsr print_char
-
-  jsr bit_delay
-  jsr rx_wait
-
-
-bit_delay:
-  phx
-  ldx #13
-bit_delay_1:
-  dex
-  bne bit_delay_1
-  plx
-  rts
-
-
-half_bit_delay:
-  phx
-  ldx #6
-half_bit_delay_1:
-  dex
-  bne half_bit_delay_1
-  plx
-  rts
+  jmp rx_wait
 
 lcd_wait:
   pha
