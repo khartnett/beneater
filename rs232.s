@@ -31,6 +31,29 @@ reset:
   lda #1
   sta PORTA
 
+  lda #"*"
+  sta $0200
+
+  lda #$01
+  trb PORTA ; Send start bit
+
+  ldx #8 ; Send 8 bits
+write_bit:
+  jsr bit_delay
+  ror $0200 ; Rotate the next bit right into C flag
+  bsc send_1
+  trb PORTA ; Send a 0
+  jmp tx_done
+send_1:
+  tsb PORTA ; Send a 1
+tx_done:
+  dex
+  bne write_bit
+
+  jsr bit_delay
+  tsb PORTA ; Send stop bit
+  jsr bit_delay
+
 rx_wait:
   bit PORTA ; Put PortA.6 into V flag
   bvs rx_wait ; loop if no start bit
