@@ -9,6 +9,7 @@ int clockSpeed = 200;
 int incomingByte = 0; // for incoming serial data
 int runMode = 0;
 int count = 0;
+int cyclesLeft = 0;
 const char *opCodes[] = {
   "BRK 7",
   "ORA izx 6",
@@ -579,12 +580,28 @@ void scan() {
     Serial.print(bit);
     data = (data << 1) + bit;
   }
-  //if (data < 169) {//a9
-    sprintf(output, "   %04x  %c %02x %s bytes: %d cycles: %d", address, digitalRead(READ_WRITE) ? 'r' : 'W', data, opCodes[data], bytesAndCycles[data][0], bytesAndCycles[data][1]);
-  //} else {
-  //  sprintf(output, "   %04x  %c %02x", address, digitalRead(READ_WRITE) ? 'r' : 'W', data);
-  //}
-  Serial.println(output);  
+
+  sprintf(output, "   %04x  %c %02x", address, digitalRead(READ_WRITE) ? 'r' : 'W', data);
+  Serial.print(output);
+  if (cyclesLeft <= 1) {
+    Serial.print(" ");
+    Serial.print(opCodes[data]);
+    Serial.print(" bytes: ");
+    Serial.print(bytesAndCycles[data][0], DEC);
+    Serial.print(" cycles: ");
+    Serial.println(bytesAndCycles[data][1], DEC);
+    cyclesLeft = bytesAndCycles[data][1]; // comment this out to ignore cycles
+  } else {
+    Serial.print(" --");
+    cyclesLeft--;
+    Serial.println(cyclesLeft, DEC);
+  }
+
+  if (address == 0xfffd) {
+      count = 0;
+      cyclesLeft = 0;
+      Serial.println("Counter Reset.");
+  }
 }
 
 void loop() {
@@ -636,6 +653,7 @@ void loop() {
       incomingByte = Serial.read(); // eat 'Enter' key
       incomingByte = 0;
       count = 0;
+      cyclesLeft = 0;
       Serial.println("Counter Reset.");
     }
    
