@@ -1,8 +1,9 @@
 const char ADDR[] = {22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52};
 const char DATA[] = {39, 41, 43, 45, 47, 49, 51, 53};
-//const char DATA[] = {3, 4, 5, 6, 7, 8, 9, 10};
 #define CLOCK 27
 #define READ_WRITE 29
+
+#define SKIP_COUNTED_CYCLES false
 
 
 int clockSpeed = 200;
@@ -590,7 +591,9 @@ void scan() {
     Serial.print(bytesAndCycles[data][0], DEC);
     Serial.print(" cycles: ");
     Serial.println(bytesAndCycles[data][1], DEC);
-    cyclesLeft = bytesAndCycles[data][1]; // comment this out to ignore cycles
+    if (SKIP_COUNTED_CYCLES) {
+      cyclesLeft = bytesAndCycles[data][1];
+    }
   } else {
     Serial.print(" --");
     cyclesLeft--;
